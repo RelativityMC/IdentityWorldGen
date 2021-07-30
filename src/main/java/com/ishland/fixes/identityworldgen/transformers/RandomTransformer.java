@@ -1,6 +1,7 @@
 package com.ishland.fixes.identityworldgen.transformers;
 
 import com.ishland.fixes.identityworldgen.Constants;
+import com.ishland.fixes.identityworldgen.FileUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -11,22 +12,32 @@ import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.security.ProtectionDomain;
 
 public class RandomTransformer implements ClassFileTransformer {
 
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-        if (!className.equals("java.util.Random".replace('.', '/'))) return null;
-        System.err.println("[IdentityWorldGen] Transforming class " + className);
-        final ClassReader classReader = new ClassReader(classfileBuffer);
-        final ClassWriter classWriter = new ClassWriter(classReader, 0);
-        final ClassNode classNode = new ClassNode();
-        classReader.accept(classNode, 0);
-        transform(classNode);
-        classNode.accept(classWriter);
-        return classWriter.toByteArray();
+        try {
+            if (!className.equals("java.util.Random".replace('.', '/'))) return null;
+            System.err.println("[IdentityWorldGen] Transforming class " + className);
+            final ClassReader classReader = new ClassReader(classfileBuffer);
+            final ClassWriter classWriter = new ClassWriter(classReader, 0);
+            final ClassNode classNode = new ClassNode();
+            classReader.accept(classNode, 0);
+            transform(classNode);
+            classNode.accept(classWriter);
+            final byte[] bytes = classWriter.toByteArray();
+            FileUtils.writeClassFile(className, bytes);
+            return bytes;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new RuntimeException(t);
+        }
     }
 
     private void transform(ClassNode classNode) {
@@ -40,6 +51,7 @@ public class RandomTransformer implements ClassFileTransformer {
                         removeMethodCall(method.instructions, previous2, "java/util/Random", "seedUniquifier", "()J");
                         removeMethodCall(method.instructions, previous, "java/lang/System", "nanoTime", "()J");
                         method.instructions.set(insnNode, new LdcInsnNode((long) Constants.identityWorldGenSeed));
+                        break;
                     }
                 }
             }

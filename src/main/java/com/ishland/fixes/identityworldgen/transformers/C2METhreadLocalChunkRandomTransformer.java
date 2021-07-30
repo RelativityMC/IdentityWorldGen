@@ -1,6 +1,7 @@
 package com.ishland.fixes.identityworldgen.transformers;
 
 import com.ishland.fixes.identityworldgen.Constants;
+import com.ishland.fixes.identityworldgen.FileUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -18,15 +19,22 @@ public class C2METhreadLocalChunkRandomTransformer implements ClassFileTransform
 
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-        if (!className.equals("com.ishland.c2me.common.config.IdentityWorldGen".replace('.', '/'))) return null;
-        System.err.println("[IdentityWorldGen] Transforming class " + className);
-        final ClassReader classReader = new ClassReader(classfileBuffer);
-        final ClassWriter classWriter = new ClassWriter(classReader, 0);
-        final ClassNode classNode = new ClassNode();
-        classReader.accept(classNode, 0);
-        transform(classNode);
-        classNode.accept(classWriter);
-        return classWriter.toByteArray();
+        try {
+            if (!className.equals("com.ishland.c2me.common.config.IdentityWorldGen".replace('.', '/'))) return null;
+            System.err.println("[IdentityWorldGen] Transforming class " + className);
+            final ClassReader classReader = new ClassReader(classfileBuffer);
+            final ClassWriter classWriter = new ClassWriter(classReader, 0);
+            final ClassNode classNode = new ClassNode();
+            classReader.accept(classNode, 0);
+            transform(classNode);
+            classNode.accept(classWriter);
+            final byte[] bytes = classWriter.toByteArray();
+            FileUtils.writeClassFile(className, bytes);
+            return bytes;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new RuntimeException(t);
+        }
     }
 
     private void transform(ClassNode classNode) {
