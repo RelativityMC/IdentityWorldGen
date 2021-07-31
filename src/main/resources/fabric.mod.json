@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "identityworldgen",
+  "version": "${version}",
+  "name": "Identity WorldGen",
+  "description": "Fix MC-55596",
+  "authors": [
+    "ishlandbukkit",
+    "ishland"
+  ],
+  "contact": {
+    "repo": "https://github.com/ishlandbukkit/IdentityWorldGen"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.ishland.fixes.identityworldgen.FabricMod"
+    ]
+  },
+  "mixins": [
+    "identityworldgen.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "java": ">=16",
+    "minecraft": "*"
+  }
+}
