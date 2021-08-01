@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_16",
   "mixinPriority": 1100,
   "mixins": [
+    "fixed_random.MixinChunkGenerator",
+    "fixes.MixinEntity",
     "structurestart.MixinBiome",
     "structurestart.MixinStructureStart"
   ],
